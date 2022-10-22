@@ -27,9 +27,11 @@ import com.example.myapplication.*
 import com.example.myapplication.ui.theme.*
 import com.example.myapplication.R
 
+var whichCamera:Int = 0
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen():Int {
+
     Box(
         modifier = Modifier
             .background(DeepBlue)
@@ -39,6 +41,7 @@ fun HomeScreen() {
            // GreetingSection()
             ChipSection(chips = listOf("HD - 1080p", "SD - 720p", "Audio - wav"))
             //CurrentMeditation()
+
             FeatureSection(
                 features = listOf(
                     Feature(
@@ -46,28 +49,32 @@ fun HomeScreen() {
                         R.drawable.ic_headphone,
                         BlueViolet1,
                         BlueViolet2,
-                        BlueViolet3
+                        BlueViolet3,
+                        1
                     ),
                     Feature(
                         title = "Front Cam 2",
                         R.drawable.ic_videocam,
                         LightGreen1,
                         LightGreen2,
-                        LightGreen3
+                        LightGreen3,
+                        2
                     ),
                     Feature(
                         title = "Back Cam 1",
                         R.drawable.ic_headphone,
                         OrangeYellow1,
                         OrangeYellow2,
-                        OrangeYellow3
+                        OrangeYellow3,
+                        3
                     ),
                     Feature(
                         title = "Back Cam 2",
                         R.drawable.ic_headphone,
                         Beige1,
                         Beige2,
-                        Beige3
+                        Beige3,
+                        4
                     )
                 )
             )
@@ -80,6 +87,7 @@ fun HomeScreen() {
 //            BottomMenuContent("Profile", R.drawable.ic_profile),
 //        ), modifier = Modifier.align(Alignment.BottomCenter))
     }
+    return whichCamera
 }
 
 @Composable
@@ -364,7 +372,7 @@ fun FeatureItem(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clickable {
-
+                        whichCamera = feature.whichCamera
                     }
                     .align(Alignment.BottomEnd)
                     .clip(RoundedCornerShape(10.dp))

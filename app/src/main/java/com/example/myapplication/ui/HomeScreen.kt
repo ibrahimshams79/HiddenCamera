@@ -1,5 +1,7 @@
 package com.example.myapplication.ui
 
+import androidx.camera.core.VideoCapture
+import androidx.camera.video.Recorder
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,18 +22,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.*
-import com.example.myapplication.ui.theme.*
 import com.example.myapplication.R
+import com.example.myapplication.ui.theme.*
+import org.w3c.dom.Text
 
-var whichCamera:Int = 0
+private var whichCamera by mutableStateOf(0)
+private var camSelected by mutableStateOf(false)
+var cameraState: String by mutableStateOf("Start")
 
 @Composable
-fun HomeScreen():Int {
+fun HomeScreen(): Int {
 
     Box(
         modifier = Modifier
@@ -38,46 +45,53 @@ fun HomeScreen():Int {
             .fillMaxSize()
     ) {
         Column {
-           // GreetingSection()
+            // GreetingSection()
             ChipSection(chips = listOf("HD - 1080p", "SD - 720p", "Audio - wav"))
             //CurrentMeditation()
 
-            FeatureSection(
-                features = listOf(
-                    Feature(
-                        title = "Front Cam 1",
-                        R.drawable.ic_headphone,
-                        BlueViolet1,
-                        BlueViolet2,
-                        BlueViolet3,
-                        1
-                    ),
-                    Feature(
-                        title = "Front Cam 2",
-                        R.drawable.ic_videocam,
-                        LightGreen1,
-                        LightGreen2,
-                        LightGreen3,
-                        2
-                    ),
-                    Feature(
-                        title = "Back Cam 1",
-                        R.drawable.ic_headphone,
-                        OrangeYellow1,
-                        OrangeYellow2,
-                        OrangeYellow3,
-                        3
-                    ),
-                    Feature(
-                        title = "Back Cam 2",
-                        R.drawable.ic_headphone,
-                        Beige1,
-                        Beige2,
-                        Beige3,
-                        4
-                    )
-                )
-            )
+            CameraSelector()
+//            FeatureSection()
+
+//            FeatureSection(
+//                features = listOf(
+//                    Feature(
+//                        title = "Front Camera 1",
+//                        R.drawable.ic_headphone,
+//                        BlueViolet1,
+//                        BlueViolet2,
+//                        BlueViolet3,
+//                        1,
+//                        camSelected = false,
+//                    ),
+//                    Feature(
+//                        title = "Front Camera 2",
+//                        R.drawable.ic_videocam,
+//                        LightGreen1,
+//                        LightGreen2,
+//                        LightGreen3,
+//                        2,
+//                        camSelected = false,
+//                    ),
+//                    Feature(
+//                        title = "Back Camera 1",
+//                        R.drawable.ic_headphone,
+//                        OrangeYellow1,
+//                        OrangeYellow2,
+//                        OrangeYellow3,
+//                        3,
+//                        camSelected = false,
+//                    ),
+//                    Feature(
+//                        title = "Back Camera 2",
+//                        R.drawable.ic_headphone,
+//                        Beige1,
+//                        Beige2,
+//                        Beige3,
+//                        4,
+//                        camSelected = false,
+//                    )
+//                )
+//            )
         }
 //        BottomMenu(items = listOf(
 //            BottomMenuContent("Home", R.drawable.ic_home),
@@ -156,7 +170,7 @@ fun BottomMenuItem(
         }
         Text(
             text = item.title,
-            color = if(isSelected) activeTextColor else inactiveTextColor
+            color = if (isSelected) activeTextColor else inactiveTextColor
         )
     }
 }
@@ -256,7 +270,7 @@ fun CurrentMeditation(
                 .padding(10.dp)
         ) {
             Icon(
-                painter = painterResource(id =R.drawable.ic_play),
+                painter = painterResource(id = R.drawable.ic_play),
                 contentDescription = "Play",
                 tint = Color.White,
                 modifier = Modifier.size(16.dp)
@@ -266,10 +280,10 @@ fun CurrentMeditation(
 }
 
 @Composable
-fun FeatureSection(features: List<Feature>) {
+fun FeatureSection() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Features",
+            text = "Select Camera",
             style = MaterialTheme.typography.h1,
             modifier = Modifier.padding(15.dp)
         )
@@ -279,8 +293,9 @@ fun FeatureSection(features: List<Feature>) {
             contentPadding = PaddingValues(start = 7.5.dp, end = 7.5.dp, bottom = 100.dp),
             modifier = Modifier.fillMaxHeight()
         ) {
-            items(features.size) {
-                FeatureItem(feature = features[it])
+            items(whichCamera) {
+//                FeatureItem(feature = features[it])
+                CameraSelector()
             }
         }
     }
@@ -296,6 +311,11 @@ fun FeatureItem(
             .aspectRatio(1f)
             .clip(RoundedCornerShape(10.dp))
             .background(feature.darkColor)
+            .clickable {
+                feature.camSelected = true
+                whichCamera = feature.whichCamera
+                camSelected = feature.camSelected
+            }
     ) {
         val width = constraints.maxWidth
         val height = constraints.maxHeight
@@ -338,6 +358,7 @@ fun FeatureItem(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
+
         ) {
             drawPath(
                 path = mediumColoredPath,
@@ -347,24 +368,33 @@ fun FeatureItem(
                 path = lightColoredPath,
                 color = feature.lightColor
             )
+
         }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(15.dp)
         ) {
+            Box(modifier = Modifier) {
+                if (camSelected) {
+                    camera(whichCamera, cameraState)
+                }
+            }
             Text(
                 text = feature.title,
                 style = MaterialTheme.typography.h2,
                 lineHeight = 26.sp,
                 modifier = Modifier.align(Alignment.TopStart)
             )
+
             Icon(
                 painter = painterResource(id = feature.iconId),
                 contentDescription = feature.title,
                 tint = Color.White,
                 modifier = Modifier.align(Alignment.BottomStart)
             )
+
             Text(
                 text = "Start",
                 color = TextWhite,
@@ -381,4 +411,115 @@ fun FeatureItem(
             )
         }
     }
+}
+
+@Composable
+fun CameraSelector() {
+    var videoCapture: androidx.camera.video.VideoCapture<Recorder> = androidx.camera.video.VideoCapture.withOutput(Recorder.Builder().build())
+    val context = LocalContext.current
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(7.5.dp)
+            .aspectRatio(1f)
+
+    ) {
+        Box(
+            modifier = Modifier
+                .width(190.dp)
+                .fillMaxHeight(1f)
+                .padding(10.dp)
+                .background(Color.White)
+                .clickable {
+                    whichCamera = 1
+                }
+
+        ) {
+            if (whichCamera == 1) {
+                videoCapture = camera(whichCamera, cameraState)
+            }
+            Text(
+                text = "Front Camera",
+                style = MaterialTheme.typography.h2,
+                lineHeight = 26.sp,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_headphone),
+                contentDescription = "Front Camera 1",
+                tint = Color.White,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+
+            Text(
+                text = cameraState,
+                color = TextWhite,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clickable(onClick = {
+                        if(cameraState == "Start"){
+                            captureVideo(videoCapture, context)
+                        }else {
+                            cameraState = "Start"
+                        }
+
+                    })
+                    .align(Alignment.BottomCenter)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(ButtonBlue)
+                    .padding(vertical = 6.dp, horizontal = 15.dp)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .width(200.dp)
+                .fillMaxHeight(1f)
+                .padding(10.dp)
+                .background(Color.White)
+                .clickable {
+                    whichCamera = 2
+                }
+
+        ) {
+            if (whichCamera == 2) {
+                camera(whichCamera, cameraState)
+            }
+
+            Text(
+                text = "Back Camera",
+                style = MaterialTheme.typography.h2,
+                lineHeight = 26.sp,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_headphone),
+                contentDescription = "Front Camera 2",
+                tint = Color.White,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+
+            Text(
+                text = cameraState,
+                color = TextWhite,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clickable {
+                        if(cameraState == "Start"){
+                            cameraState="Stop"
+                        }else cameraState = "Start"
+                    }
+                    .align(Alignment.BottomCenter)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(ButtonBlue)
+                    .padding(vertical = 6.dp, horizontal = 15.dp)
+            )
+        }
+    }
+
 }

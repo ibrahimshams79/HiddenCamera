@@ -1,6 +1,8 @@
 package com.example.myapplication
 
 import androidx.annotation.DrawableRes
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraX
 import androidx.compose.ui.graphics.Color
 
 data class Feature(
@@ -9,5 +11,6 @@ data class Feature(
     val lightColor: Color,
     val mediumColor: Color,
     val darkColor: Color,
-    val whichCamera: Int
-)
+    val whichCamera: Int,
+    var camSelected: Boolean
+    )
